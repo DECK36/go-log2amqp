@@ -1,0 +1,53 @@
+package main_test
+
+import (
+	. "github.com/DECK36/go-amqplogger"
+	"testing"
+)
+
+// copied from http://golang.org/src/pkg/strconv/quote_test.go
+type escTest struct {
+	in  string
+	out string
+}
+
+var esctests = []escTest{
+	{``, ``},
+	{`a`, `a`},
+	{`ab`, `ab`},
+	{`abc`, `abc`},
+	{`hello`, `hello`},
+	{`he\\llo`, `he\\llo`},
+	{`\hello`, `\\hello`},
+	{`h\ello`, `h\\ello`},
+	{`he\llo`, `he\\llo`},
+	{`hel\lo`, `hel\lo`}, // known bug, do not check last two chars
+	{`hell\o`, `hell\o`}, // known bug, do not check last two chars
+	{`hello\`, `hello\`}, // known bug, do not check last two chars
+	{`\x00hello`, `\\x00hello`},
+	{`\x11hello`, `\\x11hello`},
+	{`\x22hello`, `\\x22hello`},
+	{`\x23hello`, `#hello`},
+	{`\x5Chello`, `\\x5Chello`},
+	{`\x5Dhello`, `]hello`},
+	{`\x\x5Dhello`, `\\x]hello`},
+	{`\x\x\x5Dhello`, `\\x\\x]hello`},
+	{`\x5D hello`, `] hello`},
+	{`\x5D\hello`, `]\\hello`},
+	{`\x5D\\hello`, `]\\hello`},
+	{`\x5D\xhello`, `]\\xhello`},
+	{`{"field":"\xC3\xBCmlaut"}`, `{"field":"ümlaut"}`},
+	{`{"fi\xC3\xABld":"value"}`, `{"fiëld":"value"}`},
+	{`{"fi\xc3\xabld":"value"}`, `{"fiëld":"value"}`},
+}
+
+func TestSimple(t *testing.T) {
+	for _, tt := range esctests {
+		out := string(Unescape([]byte(tt.in)))
+		if out != tt.out {
+			t.Errorf("FAIL: %-10s --> %-10s, want %s", tt.in, out, tt.out)
+		} else {
+			t.Logf("OK:   %-10s --> %-10s", tt.in, out)
+		}
+	}
+}
