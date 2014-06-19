@@ -1,5 +1,5 @@
 /*
-amqplogger
+log2amqp
 
 A simple daemon that reads a file (tail -f style)
 and sends every line to an AMQP exchange.

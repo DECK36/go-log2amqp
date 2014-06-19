@@ -1,7 +1,7 @@
 package main_test
 
 import (
-	. "github.com/DECK36/go-amqplogger"
+	. "github.com/DECK36/go-log2amqp"
 	"testing"
 )
 

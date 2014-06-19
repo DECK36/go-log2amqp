@@ -1,4 +1,4 @@
-go-amqplogger
+go-log2amqp
 =============
 
 A simple daemon that reads a file (tail -f style)
@@ -10,7 +10,7 @@ Intended for nginx access logs -- so it does some special character
 encoding/escaping for that format (because `\xXX` is not valid JSON).
 
 ```
-Usage of ./go-amqplogger:
+Usage of ./go-log2amqp:
   -exchange="logtest": Durable AMQP exchange name
   -exchange-type="fanout": Exchange type - direct|fanout|topic|x-custom
   -file="/var/log/syslog": filename to watch
