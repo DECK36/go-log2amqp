@@ -39,6 +39,9 @@ var esctests = []escTest{
 	{`{"field":"\xC3\xBCmlaut"}`, `{"field":"ümlaut"}`},
 	{`{"fi\xC3\xABld":"value"}`, `{"fiëld":"value"}`},
 	{`{"fi\xc3\xabld":"value"}`, `{"fiëld":"value"}`},
+	{`{"fi\xc3\xabld":"val\x22ue"}`, `{"fiëld":"val\\x22ue"}`}, // special: \x22 = "
+	{`{"fi\xc3\xabld":"value\x22"}`, `{"fiëld":"value\\x22"}`},
+	{`{"fi\xc3\xabld\x22":"value"}`, `{"fiëld\\x22":"value"}`},
 }
 
 func TestSimple(t *testing.T) {
