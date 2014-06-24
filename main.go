@@ -7,9 +7,10 @@ and sends every line to an AMQP exchange.
 Intended for nginx access logs -- so it does some special
 character encoding/escaping for that format.
 
+TODO: decode Apache escaping
+
 2014, DECK36 GmbH & Co. KG, <martin.schuette@deck36.de>
 */
-
 package main
 
 import (
@@ -36,6 +37,8 @@ type CommandLineOptions struct {
 	exchangeName *string
 	exchangeType *string
 	routingKey   *string
+	verbose      bool
+	nofollow     bool
 }
 
 var options CommandLineOptions
@@ -49,6 +52,8 @@ func init() {
 		flag.String("exchange", "logtest", "Durable AMQP exchange name"),
 		flag.String("exchange-type", "fanout", "Exchange type - direct|fanout|topic|x-custom"),
 		flag.String("key", "nginxlog", "AMQP routing key"),
+		*flag.Bool("v", false, "Verbose output"),
+		*flag.Bool("n", false, "Quit after file is read, do not wait for more data, do not read/write state"),
 	}
 	flag.Parse()
 }
@@ -64,6 +69,7 @@ func readFileInode(fname string) uint64 {
 	}
 }
 
+// readStateFile gets previously saved file stat, i.e. inode and offset
 func readStateFile(fname string, statefile string, current_inode uint64) (offset int64) {
 	var time int64
 	var inode uint64
@@ -92,18 +98,24 @@ func readStateFile(fname string, statefile string, current_inode uint64) (offset
 	return offset
 }
 
+// write inode and offset to continue later
 func writeStateFile(statefile string, inode uint64, offset int64) {
 	data := []byte(fmt.Sprintf("Offset %d Time %d Inode %d\n",
 		offset, time.Now().UTC().Unix(), inode))
 	ioutil.WriteFile(statefile, data, 0664)
 }
 
-// read log lines from file and send them to `queue`
+// readLogsFromFile reads log lines from file and send them to `queue`
 // notify `shutdown` when file is completely read
 func readLogsFromFile(fname string, queue chan<- Logline, shutdown chan<- string, savestate <-chan bool) {
-	statefile := fname + ".state"
-	inode := readFileInode(fname)
-	offset := readStateFile(fname, statefile, inode)
+	var statefile string
+	var offset int64
+	var inode uint64
+	if !options.nofollow {
+		statefile = fname + ".state"
+		inode     = readFileInode(fname)
+		offset    = readStateFile(fname, statefile, inode)
+	}
 
 	// setup
 	config := tail.Config{
@@ -128,7 +140,12 @@ func readLogsFromFile(fname string, queue chan<- Logline, shutdown chan<- string
 			queue <- Logline(line.Text)
 		case <-savestate:
 			offset, _ := t.Tell()
-			writeStateFile(statefile, inode, offset)
+			if options.nofollow {
+				writeStateFile(statefile, inode, offset)
+			}
+			if options.verbose {
+				log.Println("reading %s, now at offset %d", fname, offset)
+			}
 		}
 	}
 }
@@ -161,6 +178,7 @@ func openAmqpChannel(amqpURI string, exchange string, exchangeType string, routi
 	return
 }
 
+// general error "handler"
 func failOnError(err error, msg string) {
 	if err != nil {
 		log.Fatalf("%s: %s", msg, err)
@@ -173,6 +191,9 @@ func writeLogsToAmqp(queue <-chan Logline, shutdown chan<- string) {
 	connection, channel, err := openAmqpChannel(*options.uri,
 		*options.exchangeName, *options.exchangeType, *options.routingKey)
 	failOnError(err, "cannot open AMQP channel")
+	if options.verbose {
+		log.Println("opened AMQP connection")
+	}
 	defer connection.Close()
 	defer channel.Close()
 
@@ -186,7 +207,7 @@ func writeLogsToAmqp(queue <-chan Logline, shutdown chan<- string) {
 		err := publishSingleMessageToAmqp(message, channel)
 		if err != nil {
 			failOnError(err, "AMQP error")
-		} else {
+		} else if options.verbose {
 			fmt.Printf(".")
 		}
 	}
