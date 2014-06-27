@@ -7,8 +7,6 @@ and sends every line to an AMQP exchange.
 Intended for nginx access logs -- so it does some special
 character encoding/escaping for that format.
 
-TODO: decode Apache escaping
-
 2014, DECK36 GmbH & Co. KG, <martin.schuette@deck36.de>
 */
 package main
@@ -25,6 +23,9 @@ import (
 	"syscall"
 	"time"
 )
+
+const thisVersion = "0.3"
+const thisProgram = "log2amqp"
 
 // indicate what variables are our payload data,
 // to improve readability (hopefully)
@@ -169,7 +170,13 @@ func openAmqpChannel(amqpURI string, exchange string, exchangeType string, routi
 	if *options.verbose {
 		log.Println("connecting to ", amqpURI, "...")
 	}
-	connection, err = amqp.Dial(amqpURI)
+	amqpConfig := amqp.Config{
+		Properties: amqp.Table{
+			"product": thisProgram,
+			"version": thisVersion,
+		},
+	}
+	connection, err = amqp.DialConfig(amqpURI, amqpConfig)
 	if err != nil {
 		return nil, nil, fmt.Errorf("AMQP Dial: %s", err)
 	}
@@ -272,7 +279,7 @@ func osSignalHandler(shutdown chan<- string) {
 
 func main() {
 	if *options.verbose {
-		log.Printf("Start, verbose: %v, nofollow: %v", *options.verbose, *options.nofollow)
+		log.Printf("Start %s %s", thisProgram, thisVersion)
 	}
 	// let goroutines tell us to shutdown (on error)
 	var sig_shutdown  = make(chan string)
