@@ -258,9 +258,14 @@ func publishSingleMessageToAmqp(message Logline, channel *amqp.Channel) error {
 // let the OS tell us to shutdown
 func osSignalHandler(shutdown chan<- string) {
 	var sigs = make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 
-	sig := <-sigs
+	sig := <-sigs  // this is the blocking part
+
+	go func(){
+		time.Sleep(2*time.Second)
+		log.Fatalf("shutdown was ignored, bailing out now.\n")
+	}()
 
 	shutdown <- fmt.Sprintf("received signal %v", sig)
 }
