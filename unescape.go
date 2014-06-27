@@ -3,7 +3,9 @@ package main
 import "strconv"
 
 /*
-Unescape nginx logs.
+Unescape sanitizes logfile output to JSON.
+
+= Unescape nginx logs =
 
 Nginx basically does the right thing and escapes all non-ASCII chars in it access logs.
 Unfortunately the resulting strings are no longer JSON compatible.
@@ -20,15 +22,26 @@ Changes with nginx 0.7.0                                         19 May 2008
     *) Change: now the 0x00-0x1F, '"' and '\' characters are escaped as \xXX
        in an access_log.
        Thanks to Maxim Dounin.
-*/
 
+= Unescape Apache logs =
+
+Apache also does decent escaping with percent encoding.
+We found only one minor issue (or curiosity) with a " quote in URLs:
+ '%U' escapes as '\"' while
+ '%r' escapes as '%22'
+
+cf. https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#format-notes
+
+*/
 func Unescape(input []byte) []byte {
 	for i := 0; i < len(input)-3; i++ {
 		//j := i
 		switch input[i] {
 		case '\\':
 			switch input[i+1] {
-			case '\\': // escaped backslash, should not occur in nginx log but ok, skip 2nd one
+			case '\\': // escaped backslash, should not occur but valid, skip 2nd one
+				i++
+			case '"': // escaped quote, used in apache logs, skip 2nd one
 				i++
 			case 'x': // escaped non-ASCII char
 				switch {

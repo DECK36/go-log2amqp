@@ -17,6 +17,7 @@ var esctests = []escTest{
 	{`ab`, `ab`},
 	{`abc`, `abc`},
 	{`hello`, `hello`},
+	{`he\"llo`, `he\"llo`},
 	{`he\\llo`, `he\\llo`},
 	{`\hello`, `\\hello`},
 	{`h\ello`, `h\\ello`},
