@@ -1,0 +1,9 @@
+# Configuration for log2amqp upstart job
+
+LOGFILE="/var/log/syslog"
+AMQP_URI="amqp://user:password@broker.example.com:5672/vhost"
+AMQP_EXCHANGE="logtest"
+AMQP_ROUTINGKEY="logtest"
+# select a user with read access to the logfile
+# and write access to the log directory (for .state)
+SETUID="www-data"

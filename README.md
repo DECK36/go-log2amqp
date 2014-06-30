@@ -1,5 +1,5 @@
 go-log2amqp
-=============
+===========
 
 A simple daemon that reads a file (tail -f style)
 and sends every line to an AMQP exchange.
@@ -19,3 +19,11 @@ Usage of ./go-log2amqp:
   -n=false: Quit after file is read, do not wait for more data, do not read/write state
   -v=false: Verbose output
 ```
+
+Package example
+---------------
+
+The `ubuntu` directory contains an example how to package this tool:
+`build.sh` will fetch all sources, compile them, and use
+[fpm](https://github.com/jordansissel/fpm) to build a Debian package
+containing the binary, the configuration, and the upstart config.

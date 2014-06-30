@@ -1,0 +1,13 @@
+description  "forward logs from file to AMQP"
+author       "Martin Schuette <martin.schuette@deck36.de>"
+
+start on filesystem or runlevel [2345]
+stop on runlevel [!2345]
+
+respawn
+console log # log stdout/stderr to /var/log/upstart/
+
+script
+  . /etc/default/log2amqp
+  start-stop-daemon --start -c $SETUID --exec /usr/local/bin/go-log2amqp -- -file="$LOGFILE" -uri="$AMQP_URI" -exchange="$AMQP_EXCHANGE" -key="$AMQP_ROUTINGKEY"
+end script
