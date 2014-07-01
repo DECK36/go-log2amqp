@@ -9,5 +9,5 @@ console log # log stdout/stderr to /var/log/upstart/
 
 script
   . /etc/default/log2amqp
-  start-stop-daemon --start -c $SETUID --exec /usr/local/bin/go-log2amqp -- -file="$LOGFILE" -uri="$AMQP_URI" -exchange="$AMQP_EXCHANGE" -key="$AMQP_ROUTINGKEY"
+  exec start-stop-daemon --start -c $SETUID --exec /usr/local/bin/go-log2amqp -- -file="$LOGFILE" -uri="$AMQP_URI" -exchange="$AMQP_EXCHANGE" -key="$AMQP_ROUTINGKEY"
 end script
