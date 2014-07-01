@@ -19,6 +19,9 @@ var esctests = []escTest{
 	{`hello`, `hello`},
 	{`he\"llo`, `he\"llo`},
 	{`he\\llo`, `he\\llo`},
+	{`he\\"llo`, `he\\\"llo`},   // invalid input, apache workaround
+	{`he\\\"llo`, `he\\\"llo`},
+	{`he\\\\"llo`, `he\\\\\"llo`}, // invalid input, apache workaround
 	{`\hello`, `\\hello`},
 	{`h\ello`, `h\\ello`},
 	{`he\llo`, `he\\llo`},
@@ -43,6 +46,12 @@ var esctests = []escTest{
 	{`{"fi\xc3\xabld":"val\x22ue"}`, `{"fiëld":"val\\x22ue"}`}, // special: \x22 = "
 	{`{"fi\xc3\xabld":"value\x22"}`, `{"fiëld":"value\\x22"}`},
 	{`{"fi\xc3\xabld\x22":"value"}`, `{"fiëld\\x22":"value"}`},
+	// good string
+	{` "load/\\\"https:\\/\\/s3-eu-west-1.amazonaws.com\\/1.svg\\\"  "`,
+	 ` "load/\\\"https:\\/\\/s3-eu-west-1.amazonaws.com\\/1.svg\\\"  "`},
+	// invalid input, found in apache log, -> workaround
+	{` "load/\\\\"https:\\/\\/s3-eu-west-1.amazonaws.com\\/1.svg\\\\"  "`,
+	 ` "load/\\\\\"https:\\/\\/s3-eu-west-1.amazonaws.com\\/1.svg\\\\\"  "`},
 }
 
 func TestSimple(t *testing.T) {

@@ -4,6 +4,8 @@ import "strconv"
 
 /*
 Unescape sanitizes logfile output to JSON.
+Important Note: a reasonably sane log template is assumed; there
+is no proper boundary checking for the first and last characters.
 
 = Unescape nginx logs =
 
@@ -25,18 +27,27 @@ Changes with nginx 0.7.0                                         19 May 2008
 
 = Unescape Apache logs =
 
-Apache also does decent escaping with percent encoding.
-We found only one minor issue (or curiosity) with a " quote in URLs:
- '%U' escapes as '\"' while
- '%r' escapes as '%22'
-
+Apache seems to do a decent escaping with percent encoding.
 cf. https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#format-notes
+Only curiosity is the different escaping of fields, e.g. for a " quote
+'%U' escapes as '\"' while '%r' escapes as '%22'
 
+Note: There may be a bug with multiple escaped chars, we found an example where
+`%5C%22` gets escaped as `\\\\"`:
+ "%U":    "/load/\\\\" https:\\ /\\ /s3...\\\\"",
+ "%r":"GET /load/%5C%22https:%5C/%5C/s3...%5C%22 HTTP/1.0",
+ATM I do not have time to look into it, so I added a workaround here.
 */
 func Unescape(input []byte) []byte {
 	for i := 0; i < len(input)-3; i++ {
 		//j := i
 		switch input[i] {
+		case '"':
+			if input[i-1] == '\\' { // cludge, assume this is unescaped by mistake
+				// keep escaped notation, but fix \ to \\
+				input = append(input[:i-1], append([]byte{'\\'}, input[i-1:]...)...)
+				i++
+			}
 		case '\\':
 			switch input[i+1] {
 			case '\\': // escaped backslash, should not occur but valid, skip 2nd one
