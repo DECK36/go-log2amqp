@@ -27,3 +27,8 @@ The `ubuntu` directory contains an example how to package this tool:
 `build.sh` will fetch all sources, compile them, and use
 [fpm](https://github.com/jordansissel/fpm) to build a Debian package
 containing the binary, the configuration, and the upstart config.
+
+Config examples
+---------------
+
+The `example` directory contains configuration snippets for Apache, nginx, and varnishncsa.

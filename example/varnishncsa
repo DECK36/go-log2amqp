@@ -1,0 +1,5 @@
+# /etc/default/varnishncsa snippet to log in JSON
+
+LOGFORMAT='{"logformat":"deck36-0.5","version":"1.1","facility":"varnish","host":"'`hostname -f`'","short_message":"%r","timestamp":%{%s}t,"remote_addr":"%h","remote_user":"%u","request_uri":"%U%q","request_full":"%r","request_status":%s,"request_time_sec":%T,"request_time_usec":%D,"varnish-time_firstbyte":%{Varnish:time_firstbyte}x,"varnish-hitmiss":"%{Varnish:hitmiss}x","varnish-handling":"%{Varnish:handling}x"}'
+
+DAEMON_OPTS+=" -F ${LOGFORMAT} "
